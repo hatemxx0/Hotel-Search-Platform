@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌍 Travel Explorer - Find Nearby Hotels</title>
+    <script>
+      (function() {
+        let mapsInitialized = false;
+
+        window.initMap = function() {
+          console.log('Google Maps API loading...');
+          
+          // Check if the API is actually loaded
+          if (!window.google?.maps?.Map) {
+            console.error('Google Maps API not properly loaded');
+            document.dispatchEvent(new CustomEvent('google-maps-error', {
+              detail: 'API not properly loaded'
+            }));
+            return;
+          }
+
+          console.log('Google Maps API loaded successfully');
+          mapsInitialized = true;
+
+          // Initialize a dummy map to get access to places service
+          try {
+            const dummyMap = new google.maps.Map(document.createElement('div'));
+            new google.maps.places.PlacesService(dummyMap);
+            
+            // Dispatch event when everything is ready
+            console.log('Dispatching google-maps-ready event');
+            window.dispatchEvent(new Event('google-maps-ready'));
+          } catch (error) {
+            console.error('Error initializing Places service:', error);
+            document.dispatchEvent(new CustomEvent('google-maps-error', {
+              detail: 'Failed to initialize Places service'
+            }));
+          }
+        };
+
+        // Add error handler
+        window.gm_authFailure = function() {
+          console.error('Google Maps authentication failed');
+          document.dispatchEvent(new CustomEvent('google-maps-error', {
+            detail: 'Authentication failed'
+          }));
+        };
+
+        // Check initialization status
+        window.isMapsInitialized = function() {
+          return mapsInitialized;
+        };
+      })();
+    </script>
+    <script type="module">
+      // Load the Google Maps JavaScript API
+      (function loadGoogleMapsScript() {
+        const script = document.createElement('script');
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        
+        if (!apiKey) {
+          console.error('Google Maps API key not found in environment variables');
+          document.dispatchEvent(new CustomEvent('google-maps-error', {
+            detail: 'API key not found'
+          }));
+          return;
+        }
+
+        console.log('Loading Google Maps script...');
+        
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&v=quarterly&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onerror = function() {
+          console.error('Failed to load Google Maps script');
+          document.dispatchEvent(new CustomEvent('google-maps-error', {
+            detail: 'Failed to load script'
+          }));
+        };
+
+        document.head.appendChild(script);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      function initMap() {
+        // This function will be called when the Google Maps script loads
+        window.dispatchEvent(new Event('google-maps-ready'));
+      }
+    </script>
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key=%VITE_GOOGLE_MAPS_API_KEY%&libraries=places&callback=initMap"
+    ></script>
+  </body>
+</html>
